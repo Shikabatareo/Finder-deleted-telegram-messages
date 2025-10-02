@@ -3,7 +3,7 @@ from telethon import TelegramClient, events
 from datetime import datetime
 import asyncio
 from dotenv import load_dotenv
-
+import os
 
 
 load_dotenv()
