@@ -4,7 +4,7 @@ from datetime import datetime
 import asyncio
 from dotenv import load_dotenv
 import os
-import vew
+import view
 
 
 load_dotenv()
