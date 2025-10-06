@@ -1,13 +1,15 @@
 import sqlite3
 import os
 
+DB_PATH = 'your_path_to_database.db'
+
+
 if __name__ == '__main__':
-    if not os.path.exists('deleted_messages.db'):
+    if not os.path.exists(DB_PATH):
         print('x База данных не существует!')
     else:
-        conn = sqlite3.connect('deleted_messages.db')
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-            
         cursor.execute('SELECT COUNT(*) FROM deleted_messages')
         count = cursor.fetchone()[0]
         print(f'\n Всего записей: {count}')
@@ -25,5 +27,6 @@ if __name__ == '__main__':
                 print("  " + "-" * 40)
         else:
             print("📭 В базе данных нет записей")
+        input("\nНажмите Enter для выхода...")
         conn.close()
 

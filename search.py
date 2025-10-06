@@ -5,6 +5,8 @@ import asyncio
 from dotenv import load_dotenv
 import os
 import view
+from telethon.tl.types import *
+
 
 
 load_dotenv()
@@ -79,7 +81,7 @@ def save_all_message(message_id, chat_id, chat_title, sender_id, sender_username
         INSERT OR REPLACE INTO all_messages 
             (message_id, chat_id, chat_title, sender_id, sender_username, sender_first_name, sender_last_name, message_text, timestamp)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''',(chat_id, chat_title, sender_id, sender_username, sender_first_name, sender_last_name, message_id, message_text, datetime.now()))
+        ''',(message_id,chat_id, chat_title, sender_id, sender_username, sender_first_name, sender_last_name, message_text, datetime.now()))
         conn.commit()
         conn.close()
         return True      
@@ -111,6 +113,9 @@ def get_message_from_db(message_id, chat_id):
     except Exception as e:
         print('Ошибка поиска сообщения в базе', e)
         return None
+    finally:
+        if conn:
+            conn.close()
 
 recent_messages = {}
 
@@ -166,9 +171,28 @@ async def new_message_handler(event):
             message_text = event.message.text
             if not message_text:
                 if event.message.media:
-                    message_text = '[Media]'
+                    media = event.message.media
+                    media_class = type(media).__name__
+                    
+                    if media_class == 'MessageMediaPhoto':
+                        message_text = '[Photo]'
+                    elif media_class == 'MessageMediaDocument':
+                        if (hasattr(media, 'document') and 
+                            hasattr(media.document, 'mime_type')):
+                            mime_type = media.document.mime_type.lower()
+                            if 'sticker' in mime_type:
+                                message_text = '[Sticker]'
+                            elif 'audio' in mime_type:
+                                message_text = '[Audio]'
+                            elif 'video' in mime_type:
+                                message_text = '[Video]'
+                            else:
+                                message_text = '[Document]'
+                        else:
+                            message_text = '[Void]'
                 else:
-                    message_text = '[Void]'
+                    message_text = '[Empty]'
+
             if hasattr(chat, 'title'):
                 chat_title = chat.title
             else:
@@ -221,5 +245,5 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print('Бот остановлен')
     except Exception as e:
-        print('Критическа ошибка: {e}')
+        print(f'Критическа ошибка: {e}')
 
